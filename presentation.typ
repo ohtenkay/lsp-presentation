@@ -338,33 +338,66 @@ $/progress
   )
 ]
 
-== Trade-Offs
+== Common Language Servers
 
-```txt
-Strengths
-  + one server reaches many editors
-  + editors avoid language-specific logic
-  + language teams reuse compiler knowledge
+#set table(stroke: 0.45pt + rgb("c7cedd"), inset: 5pt)
 
-Challenges
-  - latency matters
-  - cancellation must be handled carefully
-  - protocol cannot express every custom UI idea
-  - indexing large repositories is expensive
-```
+#table(
+  columns: (1.25fr, 1.45fr, 1.35fr),
+  [#text(weight: "bold")[Language]], [#text(weight: "bold")[Server]], [#text(weight: "bold")[Known for]],
+  [TypeScript / JS], [`typescript-language-server`], [TS Server integration],
+  [Rust], [`rust-analyzer`], [fast semantic analysis],
+  [Python], [`pyright`, `pylsp`], [types, imports, lint hooks],
+  [Go], [`gopls`], [official Go tooling],
+  [C / C++], [`clangd`], [compiler-grade indexing],
+  [Java], [`jdtls`], [Eclipse JDT backend],
+  [Lua], [`lua-language-server`], [popular in Neovim],
+)
 
-== Takeaways
+== Curiosities
 
-```txt
-1. LSP was created by Microsoft around VS Code.
+LSP is not only for compilers.
 
-2. It standardizes editor <-> language tool communication.
+#table(
+  columns: (1.25fr, 2.4fr),
+  [#text(weight: "bold")[Tool]], [#text(weight: "bold")[What it uses LSP for]],
+  [ESLint], [diagnostics and automatic fixes for JS / TS],
+  [Grammarly-style tools], [grammar, spelling, tone, and writing suggestions],
+  [Tailwind CSS], [class name completion, hover previews, diagnostics],
+  [Docker], [Dockerfile and Compose validation/completion],
+  [YAML / JSON], [schema-aware validation and completions],
+  [Github Copilot], [exposes LSP like API for AI code suggestions in various editors],
+)
 
-3. It is based on JSON-RPC 2.0 messages.
+#note[The protocol is generic: if a tool can analyze text and return ranges, edits, or suggestions, it can often be exposed as a language server.]
 
-4. The server provides structured language intelligence.
+== LSP Adoption
 
-5. The editor owns the user interface.
-```
+#align(center)[#image("assets/jetbrains.svg", width: 3.8cm)]
 
-#align(center)[#text(size: 1.55em, weight: "bold", fill: blue)[Questions?]]
+#v(0.25cm)
+
+#grid(
+  columns: (1fr, 1fr, 1fr),
+  gutter: 0.35cm,
+  [
+    #text(weight: "bold")[JetBrains]
+    - Native IDE engines first
+    - LSP mostly as fallback
+    - Deeper features via platform APIs
+  ],
+  [
+    #text(weight: "bold")[AI agents]
+    - Rarely used today, mainly for diagnostics
+    - Mostly rely on grep (ripgrep)
+    - Underexplored area IMO
+  ],
+  [
+    #text(weight: "bold")[DSLs]
+    - Great target for a small first server
+    - Your custom language gets editor support quickly
+    - Building is a great way to learn about programming from a different angle
+  ],
+)
+
+#note[If you design a small DSL, implementing a basic LSP server is a practical way to make it feel real in existing editors.]
