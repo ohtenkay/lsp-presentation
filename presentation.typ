@@ -8,7 +8,7 @@
   subtitle: "Editors, language tools, and JSON-RPC",
   authors: "Bc. Ondřej Hložek",
   layout: "medium",
-  ratio: 16 / 9,
+  ratio: 4 / 3,
   title-color: rgb("17345c"),
   bg-color: rgb("fbfbff"),
   count: "number",
@@ -54,16 +54,14 @@
 #v(0.55cm)
 
 #align(center)[
-  #grid(columns: (auto, auto), gutter: 1.4cm,
+  #grid(
+    columns: (auto, auto),
+    gutter: 1.4cm,
     align(center)[
-      #image("assets/microsoft.svg", width: 1.35cm)
-      #v(0.15cm)
-      #text(weight: "bold")[Microsoft]
+      #image("assets/microsoft.svg", width: 2.1cm)
     ],
     align(center)[
-      #image("assets/vscode.svg", width: 1.35cm)
-      #v(0.15cm)
-      #text(weight: "bold")[VS Code]
+      #image("assets/vscode.svg", width: 2.1cm)
     ],
   )
 ]
@@ -165,7 +163,7 @@ Content-Length: ...\r\n
 
 == Notification Example
 
-Requests have an `id`; notifications do not.
+Requests have an `id`; notifications do not. Notifications do not expect a response.
 
 ```json
 {
@@ -182,8 +180,6 @@ Requests have an `id`; notifications do not.
   }
 }
 ```
-
-#note[`didChange` is fire-and-forget: the server updates its document state but sends no direct response.]
 
 == Message Shapes
 
