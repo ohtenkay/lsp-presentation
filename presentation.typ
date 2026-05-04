@@ -1,5 +1,7 @@
 #import "@preview/diatypst:0.9.1": *
-#import "@preview/fletcher:0.5.8": diagram, node, edge
+#import "@preview/cetz:0.4.0"
+#import "@preview/cetz-venn:0.1.4": venn2
+#import "@preview/fletcher:0.5.8": diagram, edge, node
 
 #show: slides.with(
   title: "Language Server Protocol",
@@ -23,20 +25,21 @@
 #let server-fill = rgb("e8f8fa")
 #let neutral-fill = rgb("f0f2f7")
 
-#let capability-venn() = box(width: 100%, height: 4.5cm)[
-  #place(left + top, dx: 2.1cm, dy: 0.25cm)[
-    #circle(radius: 2.05cm, fill: client-color, stroke: 1pt + rgb("3468c0"))
-  ]
-  #place(left + top, dx: 4.9cm, dy: 0.25cm)[
-    #circle(radius: 2.05cm, fill: server-color, stroke: 1pt + rgb("1fa6b7"))
-  ]
-  #place(left + top, dx: 2.05cm, dy: 1.15cm)[#text(weight: "bold")[Client]]
-  #place(left + top, dx: 5.65cm, dy: 1.15cm)[#text(weight: "bold")[Server]]
-  #place(left + top, dx: 3.62cm, dy: 1.45cm)[#text(weight: "bold")[usable]]
-  #place(left + top, dx: 3.35cm, dy: 1.95cm)[#text(weight: "bold")[features]]
-  #place(left + top, dx: 1.25cm, dy: 2.55cm)[#note[display support]]
-  #place(left + top, dx: 5.9cm, dy: 2.55cm)[#note[compute support]]
-  #place(left + top, dx: 3.28cm, dy: 2.75cm)[#note[intersection]]
+#let capability-venn() = align(center)[
+  #cetz.canvas(length: 1.65cm, {
+    import cetz.draw: *
+
+    venn2(
+      name: "cap",
+      a-fill: client-color,
+      b-fill: server-color,
+      ab-fill: rgb("d7f1d2"),
+      stroke: 1pt + rgb("17345c"),
+    )
+    content("cap.a", [#text(size: 1.2em, weight: "bold")[B]])
+    content("cap.b", [#text(size: 1.2em, weight: "bold")[A]])
+    content("cap.ab", [#text(size: 1.2em, weight: "bold")[C]])
+  })
 ]
 
 = Why LSP Exists
@@ -47,6 +50,23 @@
   editor fragmentation and duplicated tooling effort.
 - When building VS Code, Microsoft wanted fast support for many languages.
 - They did not want to maintain custom language logic for every language inside the editor.
+
+#v(0.55cm)
+
+#align(center)[
+  #grid(columns: (auto, auto), gutter: 1.4cm,
+    align(center)[
+      #image("assets/microsoft.svg", width: 1.35cm)
+      #v(0.15cm)
+      #text(weight: "bold")[Microsoft]
+    ],
+    align(center)[
+      #image("assets/vscode.svg", width: 1.35cm)
+      #v(0.15cm)
+      #text(weight: "bold")[VS Code]
+    ],
+  )
+]
 
 == The Problem Before LSP
 
@@ -59,8 +79,8 @@ Every combination needed custom integration:
     spacing: 2.4em,
     node((0, 0), [VS Code], corner-radius: 4pt),
     node((0, 1), [Vim], corner-radius: 4pt),
-    node((0, 2), [Emacs], corner-radius: 4pt),
-    node((1, 0), [Java], corner-radius: 4pt),
+    node((0, 2), [Sublime], corner-radius: 4pt),
+    node((1, 0), [JavaScript], corner-radius: 4pt),
     node((1, 1), [Python], corner-radius: 4pt),
     node((1, 2), [Rust], corner-radius: 4pt),
     edge((0, 0), (1, 0), "-|>"),
@@ -81,34 +101,23 @@ Every combination needed custom integration:
 
 == The N Times M Problem
 
-#grid(columns: (1fr, 1fr), gutter: 0.45cm,
-  align(center)[
-    #diagram(
-      node-stroke: node-stroke,
-      node-fill: rgb("fff4e7"),
-      spacing: 3.0em,
-      node((0, 0), [N languages], corner-radius: 4pt),
-      edge("r", "-|>", [multiply]),
-      node((1, 0), [M editors], corner-radius: 4pt),
-      edge("d", "-|>", [custom glue]),
-      node((1, 1), [N*M integrations], corner-radius: 4pt),
-    )
-  ],
-  align(center)[
-    #diagram(
-      node-stroke: node-stroke,
-      node-fill: server-fill,
-      spacing: 3.0em,
-      node((0, 0), [N servers], corner-radius: 4pt),
-      edge("r", "-|>", [LSP]),
-      node((1, 0), [M clients], corner-radius: 4pt),
-      edge("d", "-|>", [standard boundary]),
-      node((1, 1), [N+M integrations], corner-radius: 4pt),
-    )
-  ],
-)
+Before LSP:
 
-#align(center)[#text(weight: "bold")[10 languages × 5 editors: 50 integrations → 15 integrations]]
+```txt
+N languages × M editors = N*M integrations
+
+Example:
+10 languages × 5 editors = 50 integrations
+```
+
+After LSP:
+
+```txt
+N languages + M editors = N + M integrations
+
+Example:
+10 language servers + 5 editor clients = 15 integrations
+```
 
 #note[The important change is the standard boundary between editor and language tooling.]
 
@@ -117,10 +126,15 @@ Every combination needed custom integration:
 #align(center)[
   #diagram(
     node-stroke: node-stroke,
-    spacing: 4.2em,
+    spacing: 3.2em,
     node((0, 0), align(center)[*PID 4210*\ VS Code\ buffers + UI + keybindings], fill: client-fill, corner-radius: 4pt),
-    edge("r", "<|-|>", [stdio / pipe / socket]),
-    node((1, 0), align(center)[*PID 4248*\ rust-analyzer\ parser + index + type checker], fill: server-fill, corner-radius: 4pt),
+    edge("d", "<|-|>", [stdio / pipe / socket]),
+    node(
+      (0, 1),
+      align(center)[*PID 4248*\ rust-analyzer\ parser + index + type checker],
+      fill: server-fill,
+      corner-radius: 4pt,
+    ),
   )
 ]
 
@@ -215,15 +229,26 @@ Response      -> result or error for a request id
 
 == Startup Handshake
 
+#v(0.55cm)
+
 #align(center)[
   #diagram(
     node-stroke: node-stroke,
-    spacing: 4.8em,
+    node-fill: neutral-fill,
+    spacing: (20em, 2.25em),
     node((0, 0), [Client], fill: client-fill, corner-radius: 4pt),
     node((1, 0), [Server], fill: server-fill, corner-radius: 4pt),
-    edge((0, 0), (1, 0), "-|>", [`initialize`\ capabilities, workspace, process]),
-    edge((1, 0), (0, 0), "-|>", [`initialize result`\ server capabilities], bend: 25deg),
-    edge((0, 0), (1, 0), "-|>", [`initialized`], bend: -25deg),
+    node((0, 1), [], width: 0.1em, height: 0.1em, stroke: none, fill: none),
+    node((1, 1), [], width: 0.1em, height: 0.1em, stroke: none, fill: none),
+    node((0, 2), [], width: 0.1em, height: 0.1em, stroke: none, fill: none),
+    node((1, 2), [], width: 0.1em, height: 0.1em, stroke: none, fill: none),
+    node((0, 3), [], width: 0.1em, height: 0.1em, stroke: none, fill: none),
+    node((1, 3), [], width: 0.1em, height: 0.1em, stroke: none, fill: none),
+    edge((0, 0), (0, 3), stroke: 0.6pt + rgb("8a93a6")),
+    edge((1, 0), (1, 3), stroke: 0.6pt + rgb("8a93a6")),
+    edge((0, 1), (1, 1), "-|>", [`initialize`: client capabilities, workspace, process]),
+    edge((1, 2), (0, 2), "-|>", [`initialize result`: server capabilities]),
+    edge((0, 3), (1, 3), "-|>", [`initialized`]),
   )
 ]
 
@@ -235,36 +260,36 @@ Response      -> result or error for a request id
 
 #capability-venn()
 
-```txt
-Client capabilities: what the editor can display or handle
-Server capabilities: what the language server can compute
-Intersection: features that are actually safe to use
-```
+- A = server capabilities
+- B = client capabilities
+- C = shared usable features
 
 #note[Example: a server may support semantic tokens, but it should only send them if the client announced support.]
 
 == Document Synchronization
 
-#align(center)[
-  #diagram(
-    node-stroke: node-stroke,
-    node-fill: neutral-fill,
-    spacing: 3.0em,
-    node((0, 0), [`didOpen`\ full text enters server memory], corner-radius: 4pt),
-    edge("r", "-|>"),
-    node((1, 0), [`didChange`\ full document or changed ranges], corner-radius: 4pt),
-    edge("r", "-|>"),
-    node((2, 0), [`didSave`\ optional save notification], corner-radius: 4pt),
-    edge("r", "-|>"),
-    node((3, 0), [`didClose`\ release document state], corner-radius: 4pt),
-  )
-]
+```txt
+textDocument/didOpen
+  full text enters server memory
+
+textDocument/didChange
+  either full document
+  or incremental changed ranges
+
+textDocument/didSave
+  optional save notification
+
+textDocument/didClose
+  server can release document state
+```
 
 #note[The server often works from the editor buffer, not only from files on disk.]
 
 = Language Features
 
 == Common Requests
+
+Requests:
 
 ```txt
 textDocument/completion       suggestions at cursor
@@ -275,9 +300,9 @@ textDocument/formatting       return text edits
 textDocument/codeAction       quick fixes and refactors
 ```
 
-```txt
-Server -> Client notifications
+Server -> Client notifications:
 
+```txt
 textDocument/publishDiagnostics
 window/showMessage
 $/progress
@@ -289,14 +314,14 @@ $/progress
   #diagram(
     node-stroke: node-stroke,
     node-fill: neutral-fill,
-    spacing: 3.4em,
+    spacing: 2.5em,
     node((0, 0), [User types\ `pri|`], corner-radius: 4pt),
-    edge("r", "-|>"),
-    node((1, 0), [Client sends\ `textDocument/completion`], fill: client-fill, corner-radius: 4pt),
-    edge("r", "-|>"),
-    node((2, 0), [Server returns\ `print`, `printf`, `private`], fill: server-fill, corner-radius: 4pt),
-    edge("r", "-|>"),
-    node((3, 0), [Editor renders menu], fill: client-fill, corner-radius: 4pt),
+    edge("d", "-|>"),
+    node((0, 1), [Client sends\ `textDocument/completion`], fill: client-fill, corner-radius: 4pt),
+    edge("d", "-|>"),
+    node((0, 2), [Server returns\ `print`, `printf`, `private`], fill: server-fill, corner-radius: 4pt),
+    edge("d", "-|>"),
+    node((0, 3), [Editor renders menu], fill: client-fill, corner-radius: 4pt),
   )
 ]
 
