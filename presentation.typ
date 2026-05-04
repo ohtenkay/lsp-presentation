@@ -338,6 +338,8 @@ $/progress
   )
 ]
 
+= Current state of the world
+
 == Common Language Servers
 
 #set table(stroke: 0.45pt + rgb("c7cedd"), inset: 5pt)
